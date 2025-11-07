@@ -17,41 +17,30 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          submodules: true
-          lfs: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install dependencies and build
         run: |
-          npm ci || npm install
-          echo "✅ Dependencies installed successfully"
-
-      - name: Build project
-        run: |
-          if [ -f package.json ]; then
-            npm run build --if-present
-          else
-            echo "⚠️ No package.json found, skipping build."
-          fi
+          echo "Installing dependencies..."
+          npm install --legacy-peer-deps
+          echo "Building the Vite project..."
+          npm run build --if-present
+          echo "✅ Build completed successfully!"
 
       - name: Deploy to Azure Static Web App
-        id: builddeploy
+        id: deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_ISLAND_0166F181E }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          app_location: "/" # App source code path
-          api_location: "" # API source code path - optional
-          output_location: "dist" # Built app content directory for Vite
-          ###### End of Repository/Build Configurations ######
+          app_location: "/"          # root of your app
+          api_location: ""           # no API
+          output_location: "dist"    # where Vite builds your site
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -59,7 +48,6 @@ jobs:
     name: Close Pull Request Job
     steps:
       - name: Close Pull Request
-        id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_WONDERFUL_ISLAND_0166F181E }}
